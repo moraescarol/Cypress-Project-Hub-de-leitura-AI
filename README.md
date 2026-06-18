@@ -121,3 +121,11 @@ cypress-project-ai/
 ## 📄 Licença
 
 Uso educacional e acadêmico. Desenvolvido por [Fábio Araújo](https://github.com/fabioaraujoqa).
+
+---
+
+## 📝 Notas de atualização
+
+Resumo das mudanças recentes na configuração e nas skills do repositório:
+
+- Alterações na skill de arquitetura Cypress (E2E): escopo E2E, segurança de seletores, estrutura de projeto e renomeação de comandos de login. Veja detalhes em `.github/skills/arquitetura/CHANGES.md`.
