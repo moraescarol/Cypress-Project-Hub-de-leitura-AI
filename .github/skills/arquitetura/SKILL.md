@@ -7,6 +7,8 @@ description: "Skill de automação Cypress E2E. Use quando o usuário pedir para
 
 You are an expert QA automation engineer specializing in Cypress end-to-end testing. When the user asks you to write, review, or debug Cypress E2E tests, follow these detailed instructions.
 
+This skill applies only to Cypress E2E tests under cypress/e2e/. Do not generate component tests unless the user explicitly asks for them.
+
 ## Core Principles
 
 1. **Cypress is not Selenium** -- Cypress runs in the browser alongside the app. Embrace its architecture.
@@ -14,6 +16,8 @@ You are an expert QA automation engineer specializing in Cypress end-to-end test
 3. **Retry-ability** -- Cypress automatically retries assertions. Lean on this feature.
 4. **Network control** -- Use `cy.intercept()` to control and assert on network requests.
 5. **Test isolation** -- Each test should start from a clean state. Use `cy.session()` for auth.
+6. **Selector safety** -- If the app does not already use `data-testid` attributes or the selectors shown in examples, ask the user for the exact selectors, routes, and text to target before generating tests; do not invent selectors or endpoints.
+7. **Clarify when missing** -- If required selectors, routes, or fixtures are not provided by the user, stop and ask a clarifying question instead of inventing them.
 
 ## Project Structure
 
@@ -31,14 +35,9 @@ cypress/
     users.json
     products.json
   support/
-    commands.ts
     e2e.ts
-    component.ts
   pages/
     login.page.ts
-    dashboard.page.ts
-  plugins/
-    index.ts
 cypress.config.ts
 ```
 
@@ -68,14 +67,8 @@ export default defineConfig({
       return config;
     },
   },
-  component: {
-    devServer: {
-      framework: 'react',
-      bundler: 'vite',
-    },
-    specPattern: 'src/**/*.cy.{ts,tsx}',
-  },
 });
+ });
 ```
 
 ## Custom Commands
@@ -87,15 +80,16 @@ export default defineConfig({
 declare global {
   namespace Cypress {
     interface Chainable {
-      login(email: string, password: string): Chainable<void>;
-      loginByApi(email: string, password: string): Chainable<void>;
-      getByTestId(testId: string): Chainable<JQuery<HTMLElement>>;
-      shouldBeVisible(text: string): Chainable<void>;
-    }
+        login(email: string, password: string): Chainable<void>;
+        loginUI(email: string, password: string): Chainable<void>;
+        loginByApi(email: string, password: string): Chainable<void>;
+        getByTestId(testId: string): Chainable<JQuery<HTMLElement>>;
+        shouldBeVisible(text: string): Chainable<void>;
+      }
   }
 }
 
-Cypress.Commands.add('login', (email: string, password: string) => {
+Cypress.Commands.add('loginUI', (email: string, password: string) => {
   cy.visit('/login');
   cy.get('[data-testid="email-input"]').type(email);
   cy.get('[data-testid="password-input"]').type(password);
@@ -397,6 +391,8 @@ it('should verify external link href', () => {
 
 ## Component Testing
 
+This skill is limited to Cypress E2E tests. Do not generate component tests here; if the user asks for component tests, ask whether they want the component-testing skill or a separate component-testing prompt.
+
 ```typescript
 // src/components/Button.cy.tsx
 import { Button } from './Button';
@@ -428,16 +424,14 @@ describe('Button component', () => {
 
 ## Best Practices
 
-1. **Use `cy.intercept()` over `cy.server()`/`cy.route()`** -- The newer API is more powerful.
-2. **Prefer `cy.session()` for authentication** -- It caches session state across tests.
-3. **Use `data-testid` attributes** -- They survive refactoring better than class selectors.
-4. **Never use `cy.wait(ms)`** -- Use `cy.wait('@alias')` for network requests or assertions for DOM.
-5. **Keep tests independent** -- Do not rely on test execution order.
-6. **Use `beforeEach` not `before`** -- Each test should set up its own state.
-7. **Return nothing from Cypress commands** -- Commands are chainable, not promise-based.
-8. **Avoid conditional testing** -- Cypress tests should be deterministic.
-9. **Use API shortcuts for state setup** -- Use `cy.request()` to set up data instead of UI clicks.
-10. **Limit use of `.then()`** -- Most operations should be chainable assertions.
+Mandatory rules:
+
+1. **Prefer `cy.intercept()`** -- Use `cy.intercept()` instead of the deprecated `cy.server()`/`cy.route()`.
+2. **Prefer `cy.session()` for auth** -- Use sessions to cache authentication where applicable.
+3. **Do not invent selectors** -- If the user's project does not already use the selectors, routes, or fixtures shown in examples, ask for the exact project structure and selectors before writing tests.
+4. **Keep tests deterministic and independent** -- Tests should not rely on execution order and should avoid arbitrary waits.
+
+If two rules conflict, follow the most specific rule for the current user request.
 
 ## Anti-Patterns to Avoid
 
